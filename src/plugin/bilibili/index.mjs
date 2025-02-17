@@ -14,13 +14,21 @@ import './push.mjs';
 const cache = new NodeCache({ stdTTL: 3 * 60 });
 const recallWatch = new NodeCache({ stdTTL: 3 * 60 });
 
+const getVideoJumpTime = ({ 3: name, 4: value } = {}) => {
+  if (!name) return;
+  const numValue = Number(value);
+  if (!numValue) return;
+  return name === 'start_progress' ? numValue / 1000 : name === 't' ? numValue : undefined;
+};
+
 const getIdFromNormalLink = link => {
   if (typeof link !== 'string') return null;
-  const searchVideo = /bilibili\.com\/video\/(?:av(\d+)|(bv[\da-z]+))/i.exec(link) || {};
+  const searchVideo =
+    /bilibili\.com\/video\/(?:av(\d+)|(bv[\da-z]+))(?:\/?\?\S*\b(t|start_progress)=([\d.]+))?/i.exec(link) || {};
   const searchDynamic =
+    /(?:www|m)\.bilibili\.com\/opus\/(\d+)/i.exec(link) ||
     /t\.bilibili\.com\/(\d+)/i.exec(link) ||
     /m\.bilibili\.com\/dynamic\/(\d+)/i.exec(link) ||
-    /www\.bilibili\.com\/opus\/(\d+)/i.exec(link) ||
     {};
   const searchArticle = /bilibili\.com\/read\/(?:cv|mobile\/)(\d+)/i.exec(link) || {};
   const searchLiveRoom = /live\.bilibili\.com\/(\d+)/i.exec(link) || {};
@@ -30,6 +38,7 @@ const getIdFromNormalLink = link => {
     dyid: searchDynamic[1],
     arid: searchArticle[1],
     lrid: searchLiveRoom[1],
+    videoJump: getVideoJumpTime(searchVideo),
   };
 };
 
@@ -38,7 +47,7 @@ const getIdFromShortLink = shortLink => {
     Axios.head(shortLink, {
       maxRedirects: 0,
       validateStatus: status => status >= 200 && status < 400,
-    })
+    }),
   )
     .then(ret => getIdFromNormalLink(ret.headers.location))
     .catch(e => {
@@ -51,13 +60,13 @@ const getIdFromShortLink = shortLink => {
 const getIdFromMsg = async msg => {
   let result = getIdFromNormalLink(msg);
   if (Object.values(result).some(id => id)) return result;
-  if ((result = /((b23|acg)\.tv|bili2233.cn)\/[0-9a-zA-Z]+/.exec(msg))) {
+  if ((result = /((b23|acg)\.tv|bili2233\.cn)\/[0-9a-zA-Z]+/.exec(msg))) {
     return getIdFromShortLink(`https://${result[0]}`);
   }
   return {};
 };
 
-const getCacheKeys = (gid, ids) => ids.filter(id => id).map(id => `${gid}-${id}`);
+const getCacheKeys = (gid, ids) => ids.filter(id => typeof id === 'string').map(id => `${gid}-${id}`);
 const markSended = (gid, ...ids) => gid && getCacheKeys(gid, ids).forEach(key => cache.set(key, true));
 
 const replyResult = async ({ context, message, at, reply, gid, ids, isMiniProgram }) => {
@@ -148,13 +157,13 @@ const bilibiliHandler = async context => {
     global.replyMsg(context, CQ.img('https://i.loli.net/2020/04/27/HegAkGhcr6lbPXv.png'));
   }
 
-  const { aid, bvid, dyid, arid, lrid } = param;
+  const { aid, bvid, dyid, arid, lrid, videoJump } = param;
 
   // 撤回观察
   recallWatch.set(context.message_id, true);
 
   if (setting.getVideoInfo && (aid || bvid)) {
-    const { text, ids, reply } = await getVideoInfo({ aid, bvid });
+    const { text, ids, reply } = await getVideoInfo({ aid, bvid }, videoJump);
     if (text) {
       replyResult({
         context,
@@ -170,7 +179,7 @@ const bilibiliHandler = async context => {
   }
 
   if (setting.getDynamicInfo && dyid) {
-    const reply = await getDynamicInfo(dyid);
+    const reply = await getDynamicInfo(dyid, true);
     if (reply) {
       replyResult({
         context,

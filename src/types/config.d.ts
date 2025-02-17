@@ -20,16 +20,20 @@ declare interface Bot {
     autoAddFriend: boolean;
     addFriendAnswers: any[];
     autoAddGroup: boolean;
+    spaceAfterAt: boolean;
     antiShielding: number;
     handleBannedHosts: boolean;
     handleBannedHostsWithLegacyMethod: boolean;
+    stopSearchingHWRatioGt: number;
     hideImg: boolean;
     hideImgWhenSaucenaoNSFW: number;
     hideImgWhenLowAcc: boolean;
     hideImgWhenWhatanimeR18: boolean;
     whatanimeSendVideo: boolean;
+    whatanimeLocalUpload: boolean;
     saucenaoDefaultDB: string;
     saucenaoLowAcc: number;
+    saucenaoLocalUpload: boolean;
     useAscii2dWhenQuotaExcess: boolean;
     useAscii2dWhenLowAcc: boolean;
     useAscii2dWhenFailed: boolean;
@@ -50,6 +54,7 @@ declare interface Bot {
     checkUpdate: number;
     ignoreOfficialBot: boolean;
     canvasLibrary: string;
+    disableMessageEscape: boolean;
     cache: Cache;
     repeat: Repeat;
     setu: Setu;
@@ -98,6 +103,8 @@ declare interface Chatgpt {
     blackGroup: Set<number | string>;
     whiteGroup: Set<number | string>;
     overrides: any[];
+    customAPI: string;
+    customChatAPI: string;
 }
 
 declare type AdditionParam = Push;
@@ -109,9 +116,13 @@ declare interface Bilibili {
     getArticleInfo: boolean;
     getLiveRoomInfo: boolean;
     dynamicImgPreDl: boolean;
+    dynamicMergeImgs: boolean;
     imgPreDlTimeout: number;
+    dynamicLinkPosition: string;
+    dynamicImgLimit: number;
     push: Push;
     pushCheckInterval: number;
+    pushIgnoreForwardingSelf: boolean;
     useFeed: boolean;
     feedCheckInterval: number;
     cookie: string;
@@ -134,10 +145,12 @@ declare interface Akhr {
     enable: boolean;
     updateInterval: number;
     ocr: string;
+    ocrFallback: any[];
 }
 
 declare interface Ocr {
     use: string;
+    fallback: any[];
     "ocr.space": OcrSpace;
     baidubce: Baidubce;
     tencent: Tencent;
@@ -178,6 +191,7 @@ declare interface Reply {
     setuError: string;
     setuReject: string;
     setuQuotaExceeded: string;
+    stopSearchingByHWRatio: string;
 }
 
 declare interface Reg {
@@ -200,6 +214,7 @@ declare interface Setu {
     sendPximgProxies: any[];
     shortenPximgProxy: string;
     size1200: boolean;
+    excludeAI: boolean;
     deleteTime: number;
     cd: number;
     limit: number;

@@ -22,7 +22,7 @@ const getMatchAndConfig = text => {
   const globalConfig = global.config.bot.chatgpt;
   let match;
   const overrideConfigIndex = globalConfig.overrides.findIndex(
-    config => config?.regexp && (match = new RegExp(config.regexp).exec(text))
+    config => config?.regexp && (match = new RegExp(config.regexp).exec(text)),
   );
   const overrideConfig = globalConfig.overrides[overrideConfigIndex];
 
@@ -50,7 +50,9 @@ const getMatchAndConfig = text => {
         'organization',
         'blackGroup',
         'whiteGroup',
-      ]
+        'customAPI',
+        'customChatAPI',
+      ],
     ),
   };
 };
@@ -77,7 +79,7 @@ const callCompletionAPI = (prompt, config) => {
     };
     if (debug) console.log('[chatgpt] params:', inspect(params, { depth: null }));
 
-    const { data } = await AxiosProxy.post('https://api.openai.com/v1/completions', params, {
+    const { data } = await AxiosProxy.post(config.customAPI || 'https://api.openai.com/v1/completions', params, {
       headers,
       validateStatus: status => 200 <= status && status < 500,
     });
@@ -132,7 +134,7 @@ const callChatAPI = (prompt, config) => {
     };
     if (debug) console.log('[chatgpt] params:', inspect(params, { depth: null }));
 
-    const { data } = await AxiosProxy.post('https://api.openai.com/v1/chat/completions', params, {
+    const { data } = await AxiosProxy.post(config.customChatAPI || 'https://api.openai.com/v1/chat/completions', params, {
       headers,
       validateStatus: status => 200 <= status && status < 500,
     });
